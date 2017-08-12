@@ -1,0 +1,32 @@
+html(lang="en")
+  head
+    title Contact Message
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+    
+    style.
+      body {
+        box-sizing: border-box;
+      }
+      h1, h2 {
+        text-align: center
+      }
+      span {
+        color: rgb(31, 164, 237)
+      }
+      .blue {
+        color: rgb(31, 164, 237);
+        border-color: rgb(31, 164, 237)
+      }
+  body
+    h1 New Contact Form Message from <span>#{name}</span>
+    h2= subject
+    hr.blue
+    ul
+      li
+        p Name: #{name}
+      li
+        p Email: #{email}
+      li
+        p Tel: #{tel}
+    
+    p= message
