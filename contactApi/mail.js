@@ -29,7 +29,7 @@ exports.send = async (options) => {
   const text = htmlToText.fromString(html)
 
   const mailOptions = {
-    from: '"Yannick Panis👻" <quinius_789@yahoo.de>', // sender address
+    from: '"QuCode | Contact-Form" <noreply@qucode.eu>', // sender address
     to: "info@qucode.eu", // list of receivers
     replyTo: `'${options.name}' <${options.email}>`,
     subject: `Web-Contact-Form: ${options.subject}`, // Subject line

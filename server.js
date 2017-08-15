@@ -21,8 +21,8 @@ mongoose.connection.on('error', (err) => {
 });
 
 app.use(cors({origin: ['http://localhost:3005', 'https://qucode.eu']}));
-app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
 
 var skillRoutes   = require('./aboutApi/routes/skillRoutes')
 var textRoutes    = require('./textApi/textRoutes')
