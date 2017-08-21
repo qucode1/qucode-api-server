@@ -6,10 +6,11 @@ const Project = mongoose.model('Project')
 
 exports.getAllProjects = (req, res) => (
   Project.find({}, (err, projects) => {
-    if (err)
-      res.send(err)
-    console.log('all projects requested ' + Date())
-    res.json(projects)
+    if (err) res.send(err)
+    else {
+      console.log('all projects requested ' + Date())
+      res.json(projects)
+    }
   })
 )
 
@@ -21,7 +22,6 @@ exports.createProject = (req, res) => {
       console.log(err)
       res.send(err)
     } else {
-
     console.log(project.name + ' created ' + Date())
     res.json(project)
   }

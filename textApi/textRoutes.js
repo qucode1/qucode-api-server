@@ -4,7 +4,7 @@ module.exports = function(app) {
 
   app.route('/texts')
     .get(text.getAllTexts)
-    // .post(text.createText)
+    .post(text.createText)
 
   app.route('/texts/c/:category')
     .get(text.getCategoryTexts)
