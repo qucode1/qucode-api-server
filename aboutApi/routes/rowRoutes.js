@@ -6,8 +6,11 @@ module.exports = function(app) {
     .get(row.getAllRows)
     .post(row.createRow)
 
-  // app.route('/skills/:id')
-  //   .get(skill.getOneSkill)
-    // .post(skill.updateSkill)
-    // .delete(skill.deleteSkill)
+  app.route('/about/rows/active')
+    .get(row.getActiveRows)
+    
+  app.route('/about/rows/:id')
+    .get(row.getOneRow)
+    .post(row.updateRow)
+    .delete(row.deleteRow)
 }

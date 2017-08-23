@@ -8,6 +8,6 @@ module.exports = function(app) {
 
   app.route('/skills/:id')
     .get(skill.getOneSkill)
-    // .post(skill.updateSkill)
-    // .delete(skill.deleteSkill)
+    .post(skill.updateSkill)
+    .delete(skill.deleteSkill)
 }

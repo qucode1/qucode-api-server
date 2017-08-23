@@ -5,7 +5,7 @@ var Schema = mongoose.Schema
 var textSchema = new Schema({
   name: {
     type: String,
-    required: 'Please define a skill name'
+    required: 'Please define a text name'
   },
   content: {
     type: String,
