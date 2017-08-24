@@ -90,8 +90,8 @@ exports.updateRow = (req, res) => {
       res.send(err)
     } else {
       if(row) {
-        if(req.body.text) {
-          Text.findOneAndUpdate( {_id: row.text}, req.body.text, {new: true}, (err, text) => {
+        if(req.body.content) {
+          Text.findOneAndUpdate( {_id: row.text}, {$set:{content: req.body.content}}, {new: true}, (err, text) => {
             if(err) {
               console.log(err)
               res.send(err)
@@ -102,8 +102,10 @@ exports.updateRow = (req, res) => {
             }
           })
         }
-        if(req.body.name) row.name = req.body.name
-        if(req.body.active) row.active = req.body.active
+        if(req.body.name) {row.name = req.body.name}
+        if(req.body.active === true || req.body.active === false) {
+          row.active = req.body.active
+        }
         row.save((err, newRow) => {
           err
           ? (console.error(err), res.send(err))
