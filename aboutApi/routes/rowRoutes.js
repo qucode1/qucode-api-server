@@ -8,7 +8,10 @@ module.exports = function(app) {
 
   app.route('/about/rows/active')
     .get(row.getActiveRows)
-    
+
+  app.route('/about/rows/inactive')
+    .get(row.getInactiveRows)
+
   app.route('/about/rows/:id')
     .get(row.getOneRow)
     .post(row.updateRow)

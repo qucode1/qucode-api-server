@@ -20,7 +20,22 @@ exports.getActiveRows = (req, res) => (
         res.json(rows)
       }
     })
+)
 
+exports.getInactiveRows = (req, res) => (
+  Row
+    .find({ active: false })
+    .populate('text')
+    .populate('skills')
+    .exec( (err, rows) => {
+      if(err) {
+        console.error(err)
+        res.send(err)
+      } else {
+        console.log('all inactive rows requested at ' + Date())
+        res.json(rows)
+      }
+    })
 )
 
 exports.createRow = (req, res) => {

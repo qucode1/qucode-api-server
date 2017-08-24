@@ -5,6 +5,7 @@ const express     = require('express'),
       cors        = require('cors'),
       app         = express(),
       Row         = require('./aboutApi/models/rowModel')
+      List        = require('./listApi/listModel')
       Skill       = require('./aboutApi/models/skillModel'),
       Text        = require('./textApi//textModel'),
       Project     = require('./portfolioApi/projectModel'),
@@ -27,6 +28,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true}))
 
 var skillRoutes   = require('./aboutApi/routes/skillRoutes')
+var listRoutes    = require('./listApi/listRoutes')
 var rowRoutes     = require('./aboutApi/routes/rowRoutes')
 var textRoutes    = require('./textApi/textRoutes')
 var projectRoutes = require('./portfolioApi/projectRoutes')
@@ -36,6 +38,7 @@ app.route('/contact')
 
 rowRoutes(app)
 skillRoutes(app)
+listRoutes(app)
 textRoutes(app)
 projectRoutes(app)
 
