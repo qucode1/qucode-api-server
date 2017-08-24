@@ -7,8 +7,7 @@ var listSchema = new mongoose.Schema({
     required: 'Please add a list Name'
   },
   items: [{
-    type: String,
-    required: 'Please add an item'
+    type: String
   }]
 });
 

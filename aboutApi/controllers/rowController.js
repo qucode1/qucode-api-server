@@ -5,6 +5,7 @@ var mongoose = require('mongoose')
 const Row = mongoose.model('Row')
 const Text = mongoose.model('Text')
 const Skill = mongoose.model('Skill')
+const List = mongoose.model('List')
 
 exports.getActiveRows = (req, res) => (
   Row
@@ -54,8 +55,31 @@ exports.createRow = (req, res) => {
           console.error(err)
           res.json(err)
         } else {
-          console.log('New Row created at ' + Date())
-          res.json(row)
+          const listName = req.body.active === 'true'
+            ? 'Active Rows'
+            : 'Inactive Rows'
+          List
+            .findOne({name: listName})
+            .exec((err, list) => {
+              if(err) {
+                console.error(err)
+                res.send(err)
+              } else {
+                let listItems = list.items
+                listItems.push(row._id)
+                list.items = listItems
+                list.save((err, list) => {
+                  if(err) {
+                    console.log(err)
+                    res.send(err)
+                  } else {
+                    console.log('New Row created at ' + Date())
+                    res.json(row)
+                  }
+                })
+              }
+            })
+
         }
       })
     }
@@ -120,6 +144,33 @@ exports.updateRow = (req, res) => {
         if(req.body.name) {row.name = req.body.name}
         if(req.body.active === true || req.body.active === false) {
           row.active = req.body.active
+
+          function updateList(listname) {
+            List.findOne({name: listname}, (err, list) => {
+              let items = list.items
+              items.indexOf(row._id) > -1
+              ? (items.splice(items.indexOf(row._id), 1),
+                list.items = items,
+                list.save(err => {
+                  if(err) {
+                    console.error(err)
+                    res.send(err)
+                  }
+                })
+              )
+              : (items.push(row._id),
+                list.items = items,
+                list.save(err => {
+                  if(err) {
+                    console.error(err)
+                    res.send(err)
+                  }
+                })
+              )
+            })
+          }
+          updateList('Active Rows')
+          updateList('Inactive Rows')
         }
         row.save((err, newRow) => {
           err
@@ -135,13 +186,40 @@ exports.updateRow = (req, res) => {
 }
 
 exports.deleteRow = (req, res) => {
-  Row.remove({
-    _id: req.params.id
-  }, (err, row) => {
-    if (err) res.send(err)
-    else {
-      console.log('row deleted ' + Date())
-      res.json({ message: 'Row successfully deleted'})
+  Row.findOne({_id: req.params.id}, (err, row) => {
+    if(err) {
+      console.error(err)
+      res.send(err)
+    } else {
+      const listName = row.active === 'true'
+        ? 'Active Rows'
+        : 'Inactive Rows'
+      List.findOne({name: listName}, (err, list) => {
+        if(err) {
+          console.error(err)
+          res.send(err)
+        } else {
+          const listItems = list.items
+          listItems.splice(listItems.indexOf(row._id), 1)
+          list.items = listItems
+          list.save((err, list) => {
+            if(err) {
+              console.error(err)
+              res.send(err)
+            } else {
+              Row.remove({
+                _id: req.params.id
+              }, (err, row) => {
+                if (err) res.send(err)
+                else {
+                  console.log('row deleted ' + Date())
+                  res.json({ message: 'Row successfully deleted'})
+                }
+              })
+            }
+          })
+        }
+      })
     }
   })
 }
