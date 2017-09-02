@@ -144,11 +144,10 @@ exports.updateRow = (req, res) => {
         if(req.body.name) {row.name = req.body.name}
         if(req.body.active === true || req.body.active === false) {
 
-
           function updateList(listname) {
             if(row.active === req.body.active) return
             List.findOne({name: listname}, (err, list) => {
-              
+
               let items = list.items
 
               items.indexOf(row._id) > -1

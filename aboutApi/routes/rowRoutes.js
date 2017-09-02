@@ -1,4 +1,7 @@
 'use strict'
+
+const authCheckMiddleware = require('../../middleware/auth-check')
+
 module.exports = function(app) {
   var row = require('../controllers/rowController')
 
@@ -10,7 +13,7 @@ module.exports = function(app) {
     .get(row.getActiveRows)
 
   app.route('/about/rows/inactive')
-    .get(row.getInactiveRows)
+    .get(authCheckMiddleware, row.getInactiveRows)
 
   app.route('/about/rows/:id')
     .get(row.getOneRow)
