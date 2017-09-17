@@ -4,10 +4,10 @@ module.exports = function(app) {
 
   app.route('/projects')
     .get(project.getAllProjects)
-    // .post(project.createProject)
+    .post(project.upload, project.resize, project.createProject)
   //
-  // app.route('/project/:id')
-  //   .get(project.getOneProject)
+  // app.route('/projects/:id')
+  // .get(project.getOneProject)
   //   .post(project.updateProject)
   //   .delete(project.deleteProject)
 }
