@@ -5,9 +5,15 @@ module.exports = function(app) {
   app.route('/projects')
     .get(project.getAllProjects)
     .post(project.upload, project.resize, project.createProject)
-  //
-  // app.route('/projects/:id')
-  // .get(project.getOneProject)
+
+  app.route('/projects/active')
+    .get(project.getActiveProjects)
+
+  app.route('/projects/inactive')
+    .get(project.getInactiveProjects)
+
+  app.route('/projects/:id')
+    .get(project.getOneProject)
   //   .post(project.updateProject)
   //   .delete(project.deleteProject)
 }

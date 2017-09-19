@@ -4,6 +4,7 @@ const multer    = require('multer')
 const jimp      = require('jimp')
 const mongoose  = require('mongoose')
 const Project   = mongoose.model('Project')
+const List      = mongoose.model('List')
 
 AWS.config.loadFromPath('./variables.json')
 
@@ -39,24 +40,26 @@ exports.resize = async(req, res, next) => {
   const title     = `${Date.now()}-${req.body.name}.${extension}`
   req.body.image  = `${title}`
   // https://s3.eu-central-1.amazonaws.com/qucode.homepage/projects/thumbnails/
-  const image     = await jimp.read(req.file.buffer)
-  const thumbnail = await jimp.read(req.file.buffer)
-  await thumbnail.resize(400, jimp.AUTO)
-  await thumbnail.quality(70)
-  await image.quality(50)
-  // await image.write(`./uploads/${req.body.image}`)
-  // await thumbnail.write(`./uploads/thumbnails/${req.body.image}`)
-  const imageBuffer = image.getBuffer(jimp.AUTO, (err, data) => {
-    const params = {ACL: 'public-read', Bucket: 'qucode.homepage/projects', Key: `${title}`, Body: data}
-    s3.upload(params, (err, data) => console.log({err, data}))
-
+  await jimp.read(req.file.buffer).then((img) => {
+    img.quality(70)
+       .getBuffer(jimp.AUTO, (err, data) => {
+         const params = {ACL: 'public-read', Bucket: 'qucode.homepage/projects', Key: `${title}`, Body: data}
+         s3.upload(params, (err, data) => console.log({err, data}))
+       })
+  }).catch((err) => {
+    console.error(err)
   })
-  const thumbnailBuffer = thumbnail.getBuffer(jimp.AUTO, (err, data) => {
-    const params = {ACL: 'public-read', Bucket: 'qucode.homepage/projects/thumbnails', Key: `${title}`, Body: data}
-    s3.upload(params, (err, data) => console.log({err, data}))
-
+  await jimp.read(req.file.buffer).then((thumb) => {
+    console.log('thumb func')
+    thumb.resize(400, jimp.AUTO)
+         .quality(70)
+         .getBuffer(jimp.AUTO, (err, data) => {
+           const params = {ACL: 'public-read', Bucket: 'qucode.homepage/projects/thumbnails', Key: `${title}`, Body: data}
+           s3.upload(params, (err, data) => console.log({err, data}))
+         })
+  }).catch((err) => {
+    console.error(err)
   })
-  // console.log("resize passed")
   next()
   }
   catch(error) {
@@ -74,6 +77,44 @@ exports.getAllProjects = (req, res) => (
   })
 )
 
+exports.getActiveProjects = (req, res) => (
+  Project.find({active: true}, (err, projects) => {
+    if (err) res.send(err)
+    else {
+      console.log('all active Projects requested ' + Date())
+      res.json(projects)
+    }
+  })
+)
+
+exports.getInactiveProjects = (req, res) => (
+  Project.find({active: false}, (err, projects) => {
+    if (err) res.send(err)
+    else {
+      console.log('all inactive Projects requested ' + Date())
+      res.json(projects)
+    }
+  })
+)
+
+exports.getOneProject = (req, res) => {
+  Project
+    .findById(req.params.id)
+    .exec((err, project) => {
+      if(err) {
+        console.error(err)
+        res.json(err)
+      } else {
+        project
+        ? (
+          console.log('Project: ' + project.name + ' requested ' + Date()),
+          res.json(project)
+        )
+        : (console.error('Project not found'), res.json({'error': 'Project not found'}))
+      }
+    })
+}
+
 exports.createProject = (req, res) => {
   const newProject = new Project(req.body)
   console.log(req.body)
@@ -82,8 +123,30 @@ exports.createProject = (req, res) => {
       console.log(err)
       res.json(err)
     } else {
-    console.log(project.name + ' created ' + Date())
-    res.json(project)
-  }
+      const listName = req.body.active === 'true'
+        ? 'Active Projects'
+        : 'Inactive Projects'
+      List
+        .findOne({name: listName})
+        .exec((err, list) => {
+          if(err) {
+            console.error(err)
+            res.json(err)
+          } else {
+            let listItems = list.items
+            listItems.push(project._id)
+            list.items = listItems
+            list.save((err, list) => {
+              if(err) {
+                console.log(err)
+                res.json(err)
+              } else {
+                console.log(project.name + ' created ' + Date())
+                res.json(project)
+              }
+            })
+          }
+        })
+    }
   })
 }

@@ -21,6 +21,10 @@ var projectSchema = new Schema({
   url: {
     type: String
   },
+  active: {
+    type: Boolean,
+    required: 'Please define if the Project should be public or not'
+  },
   created: {
     type: Date,
     default: Date.now()
