@@ -43,19 +43,28 @@ exports.resize = async(req, res, next) => {
   await jimp.read(req.file.buffer).then((img) => {
     img.quality(70)
        .getBuffer(jimp.AUTO, (err, data) => {
-         const params = {ACL: 'public-read', Bucket: 'qucode.homepage/projects', Key: `${title}`, Body: data}
-         s3.upload(params, (err, data) => console.log({err, data}))
+         const params = {ACL: 'public-read', Bucket: 'qucode.homepage', Key: `projects/${title}`, Body: data}
+         s3.upload(params, (err, data) => {
+           if(err) {
+             console.error(err)
+             res.json(err)
+           }
+         })
        })
   }).catch((err) => {
     console.error(err)
   })
   await jimp.read(req.file.buffer).then((thumb) => {
-    console.log('thumb func')
     thumb.resize(400, jimp.AUTO)
          .quality(70)
          .getBuffer(jimp.AUTO, (err, data) => {
-           const params = {ACL: 'public-read', Bucket: 'qucode.homepage/projects/thumbnails', Key: `${title}`, Body: data}
-           s3.upload(params, (err, data) => console.log({err, data}))
+           const params = {ACL: 'public-read', Bucket: 'qucode.homepage', Key: `projects/thumbnails/${title}`, Body: data}
+           s3.upload(params, (err, data) => {
+             if(err) {
+               console.error(err)
+               res.json(err)
+             }
+           })
          })
   }).catch((err) => {
     console.error(err)
@@ -117,7 +126,7 @@ exports.getOneProject = (req, res) => {
 
 exports.createProject = (req, res) => {
   const newProject = new Project(req.body)
-  console.log(req.body)
+  // console.log(req.body)
   newProject.save((err, project) => {
     if (err) {
       console.log(err)
@@ -141,7 +150,7 @@ exports.createProject = (req, res) => {
                 console.log(err)
                 res.json(err)
               } else {
-                console.log(project.name + ' created ' + Date())
+                console.log('PROJECT: ' + '\'' + project.name + '\'' + ' CREATED ' + Date())
                 res.json(project)
               }
             })
@@ -173,13 +182,33 @@ exports.deleteProject = (req, res) => {
               console.error(err)
               res.json(err)
             } else {
-              Project.remove({
-                _id: req.params.id
-              }, (err, project) => {
-                if (err) res.send(err)
-                else {
-                  console.log('project deleted ' + Date())
-                  res.json({ message: 'Project successfully deleted'})
+              const deleteParams = {
+                Bucket: 'qucode.homepage',
+                Delete: {
+                  Objects: [
+                    {
+                      Key: `projects/${project.image}`
+                    },
+                    {
+                      Key: `projects/thumbnails/${project.image}`
+                    }
+                  ]
+                }
+              }
+              s3.deleteObjects(deleteParams, (err, data) => {
+                if(err) {
+                  console.error(err)
+                  res.json(err)
+                } else {
+                  Project.remove({
+                    _id: req.params.id
+                  }, (err, project) => {
+                    if (err) res.json(err)
+                    else {
+                      console.log('PROJECT DELETED ' + Date())
+                      res.json({ message: 'Project successfully deleted'})
+                    }
+                  })
                 }
               })
             }
