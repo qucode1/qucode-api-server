@@ -150,3 +150,42 @@ exports.createProject = (req, res) => {
     }
   })
 }
+
+exports.deleteProject = (req, res) => {
+  Project.findOne({_id: req.params.id}, (err, project) => {
+    if(err) {
+      console.error(err)
+      res.json(err)
+    } else {
+      const listName = project.active === 'true'
+        ? 'Active Projects'
+        : 'Inactive Projects'
+      List.findOne({name: listName}, (err, list) => {
+        if(err) {
+          console.error(err)
+          res.json(err)
+        } else {
+          const listItems = list.items
+          listItems.splice(listItems.indexOf(project._id), 1)
+          list.items = listItems
+          list.save((err, list) => {
+            if(err) {
+              console.error(err)
+              res.json(err)
+            } else {
+              Project.remove({
+                _id: req.params.id
+              }, (err, project) => {
+                if (err) res.send(err)
+                else {
+                  console.log('project deleted ' + Date())
+                  res.json({ message: 'Project successfully deleted'})
+                }
+              })
+            }
+          })
+        }
+      })
+    }
+  })
+}
