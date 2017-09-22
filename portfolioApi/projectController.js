@@ -30,8 +30,6 @@ exports.resize = async(req, res, next) => {
   try {
   //check if there is no new file to resize
   if(!req.file) {
-    console.log("req.file == false")
-    console.log(req.body)
     next()
     return
   }
@@ -160,6 +158,43 @@ exports.createProject = (req, res) => {
   })
 }
 
+exports.deleteImagesFromS3 = (req, res, next) => {
+  if(!req.file) {
+    next()
+    return
+  }
+  Project.findOne({_id: req.params.id}).exec()
+  .then((project) => {
+    const deleteParams = {
+      Bucket: 'qucode.homepage',
+      Delete: {
+        Objects: [
+          {
+            Key: `projects/${project.image}`
+          },
+          {
+            Key: `projects/thumbnails/${project.image}`
+          }
+        ]
+      }
+    }
+    s3.deleteObjects(deleteParams, (err, data) => {
+      if(err) {
+        console.error(err)
+        res.json(err)
+      } else {
+        console.log('S3 Images ' + project.image + ' DELETED ' + Date())
+        next()
+        return
+      }
+    })
+  })
+  .catch((err) => {
+    console.error(err)
+    res.json({'error': err})
+  })
+}
+
 exports.deleteProject = (req, res) => {
   Project.findOne({_id: req.params.id}, (err, project) => {
     if(err) {
@@ -217,4 +252,86 @@ exports.deleteProject = (req, res) => {
       })
     }
   })
+}
+
+exports.updateProject = (req, res) => {
+
+
+  // done in upload and resize funcs:
+  // check if image is truthy, if it is
+  // delete old image on s3, upload new image
+
+
+  let newStatus = false
+  // convert status string to boolean
+  req.body.active = req.body.active === 'true' ? true : false
+
+  const findProject = Project.findOne({_id: req.params.id}).exec()
+
+  const compareStatus = (project) => {
+    console.log({'formStatus': req.body, 'projectData': project})
+    if(req.body.active !== project.active) {
+      console.log("formStatus != project.status")
+      newStatus = true
+    }
+  }
+
+  const updateList = (project, list, status) => {
+    console.log("updateList")
+    console.log({project, list, status})
+    List.findOne({name: list}).exec()
+    .then((list) => {
+      let items = list.items
+
+      items.indexOf(project._id) > -1
+      ? (items.splice(items.indexOf(project._id), 1),
+        list.items = items,
+        list.save()
+      )
+      : (items.push(project._id),
+        list.items = items,
+        list.save()
+      )
+    })
+    .catch((err) => {
+      console.error(err)
+      res.json({'error': err})
+    })
+  }
+
+  const saveProject = (project) => {
+    console.log({'saveProject': project})
+    project.name        = req.body.name
+    project.description = req.body.description
+    if(req.body.image !== 'undefined'){
+      project.image     = req.body.image
+    }
+    // project.tags        = req.body.tags
+    // project.liveURL     = req.body.liveURL
+    // project.github      = req.body.github
+    project.active      = req.body.active
+
+    return project.save()
+  }
+
+  // find project
+  findProject.then((project) => {
+    // compare active status...
+    compareStatus(project)
+    console.log({'updateList': newStatus})
+    // if it changed, update active and inactive list
+    if(newStatus) {
+      updateList(project, 'Active Projects', req.body.active)
+      updateList(project, 'Inactive Projects', req.body.active)
+    }
+    // save project with new data
+    saveProject(project)
+    res.json({'status': 'success', 'message': `Project '${project.name}' has been updated`})
+  })
+  // catch errors
+  .catch((err) => {
+    console.error(err)
+    res.json(err)
+  })
+
 }

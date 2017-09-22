@@ -14,6 +14,6 @@ module.exports = function(app) {
 
   app.route('/projects/:id')
     .get(project.getOneProject)
-  //   .post(project.updateProject)
+    .post(project.upload, project.deleteImagesFromS3, project.resize, project.updateProject)
     .delete(project.deleteProject)
 }
