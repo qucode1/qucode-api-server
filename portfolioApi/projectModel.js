@@ -21,6 +21,12 @@ var projectSchema = new Schema({
   url: {
     type: String
   },
+  liveUrl: {
+    type: String
+  },
+  github: {
+    type: String
+  },
   active: {
     type: Boolean,
     required: 'Please define if the Project should be public or not'

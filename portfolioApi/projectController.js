@@ -45,12 +45,13 @@ exports.resize = async(req, res, next) => {
          s3.upload(params, (err, data) => {
            if(err) {
              console.error(err)
-             res.json(err)
+             res.json({'status': 'failure', 'message': err.message})
            }
          })
        })
   }).catch((err) => {
     console.error(err)
+    res.json({'status': 'failure', 'message': err.message})
   })
   await jimp.read(req.file.buffer).then((thumb) => {
     thumb.resize(400, jimp.AUTO)
@@ -66,17 +67,19 @@ exports.resize = async(req, res, next) => {
          })
   }).catch((err) => {
     console.error(err)
+    res.json({'status': 'failure', 'message': err.message})
   })
   next()
   }
   catch(error) {
     console.log(error)
+    res.json({'status': 'failure', 'message': err.message})
   }
 }
 
 exports.getAllProjects = (req, res) => (
   Project.find({}, (err, projects) => {
-    if (err) res.send(err)
+    if (err) res.json({'status': 'failure', 'message': err.message})
     else {
       console.log('all projects requested ' + Date())
       res.json(projects)
@@ -86,7 +89,7 @@ exports.getAllProjects = (req, res) => (
 
 exports.getActiveProjects = (req, res) => (
   Project.find({active: true}, (err, projects) => {
-    if (err) res.send(err)
+    if (err) res.json({'status': 'failure', 'message': err.message})
     else {
       console.log('all active Projects requested ' + Date())
       res.json(projects)
@@ -96,7 +99,7 @@ exports.getActiveProjects = (req, res) => (
 
 exports.getInactiveProjects = (req, res) => (
   Project.find({active: false}, (err, projects) => {
-    if (err) res.send(err)
+    if (err) res.json({'status': 'failure', 'message': err.message})
     else {
       console.log('all inactive Projects requested ' + Date())
       res.json(projects)
@@ -110,7 +113,7 @@ exports.getOneProject = (req, res) => {
     .exec((err, project) => {
       if(err) {
         console.error(err)
-        res.json(err)
+        res.json({'status': 'failure', 'message': err.message})
       } else {
         project
         ? (
@@ -128,7 +131,7 @@ exports.createProject = (req, res) => {
   newProject.save((err, project) => {
     if (err) {
       console.log(err)
-      res.json(err)
+      res.json({'status': 'failure', 'message': err.message})
     } else {
       const listName = req.body.active === 'true'
         ? 'Active Projects'
@@ -138,7 +141,7 @@ exports.createProject = (req, res) => {
         .exec((err, list) => {
           if(err) {
             console.error(err)
-            res.json(err)
+            res.json({'status': 'failure', 'message': err.message})
           } else {
             let listItems = list.items
             listItems.push(project._id)
@@ -146,7 +149,7 @@ exports.createProject = (req, res) => {
             list.save((err, list) => {
               if(err) {
                 console.log(err)
-                res.json(err)
+                res.json({'status': 'failure', 'message': err.message})
               } else {
                 console.log('PROJECT: ' + '\'' + project.name + '\'' + ' CREATED ' + Date())
                 res.json(project)
@@ -181,7 +184,7 @@ exports.deleteImagesFromS3 = (req, res, next) => {
     s3.deleteObjects(deleteParams, (err, data) => {
       if(err) {
         console.error(err)
-        res.json(err)
+        res.json({'status': 'failure', 'message': err.message})
       } else {
         console.log('S3 Images ' + project.image + ' DELETED ' + Date())
         next()
@@ -191,7 +194,7 @@ exports.deleteImagesFromS3 = (req, res, next) => {
   })
   .catch((err) => {
     console.error(err)
-    res.json({'error': err})
+    res.json({'status': 'failure', 'message': err.message})
   })
 }
 
@@ -199,7 +202,7 @@ exports.deleteProject = (req, res) => {
   Project.findOne({_id: req.params.id}, (err, project) => {
     if(err) {
       console.error(err)
-      res.json(err)
+      res.json({'status': 'failure', 'message': err.message})
     } else {
       const listName = project.active === 'true'
         ? 'Active Projects'
@@ -207,7 +210,7 @@ exports.deleteProject = (req, res) => {
       List.findOne({name: listName}, (err, list) => {
         if(err) {
           console.error(err)
-          res.json(err)
+          res.json({'status': 'failure', 'message': err.message})
         } else {
           const listItems = list.items
           listItems.splice(listItems.indexOf(project._id), 1)
@@ -215,7 +218,7 @@ exports.deleteProject = (req, res) => {
           list.save((err, list) => {
             if(err) {
               console.error(err)
-              res.json(err)
+              res.json({'status': 'failure', 'message': err.message})
             } else {
               const deleteParams = {
                 Bucket: 'qucode.homepage',
@@ -238,7 +241,7 @@ exports.deleteProject = (req, res) => {
                   Project.remove({
                     _id: req.params.id
                   }, (err, project) => {
-                    if (err) res.json(err)
+                    if (err) res.json({'status': 'failure', 'message': err.message})
                     else {
                       console.log('PROJECT DELETED ' + Date())
                       res.json({ message: 'Project successfully deleted'})
@@ -269,7 +272,7 @@ exports.updateProject = (req, res) => {
   const findProject = Project.findOne({_id: req.params.id}).exec()
 
   const compareStatus = (project) => {
-    console.log({'formStatus': req.body, 'projectData': project})
+    // console.log({'formStatus': req.body, 'projectData': project})
     if(req.body.active !== project.active) {
       console.log("formStatus != project.status")
       newStatus = true
@@ -277,8 +280,8 @@ exports.updateProject = (req, res) => {
   }
 
   const updateList = (project, list, status) => {
-    console.log("updateList")
-    console.log({project, list, status})
+    // console.log("updateList")
+    // console.log({project, list, status})
     List.findOne({name: list}).exec()
     .then((list) => {
       let items = list.items
@@ -295,20 +298,20 @@ exports.updateProject = (req, res) => {
     })
     .catch((err) => {
       console.error(err)
-      res.json({'error': err})
+      res.json({'status': 'failure', 'message': err.message})
     })
   }
 
   const saveProject = (project) => {
-    console.log({'saveProject': project})
+    // console.log({'saveProject': project})
     project.name        = req.body.name
     project.description = req.body.description
     if(req.body.image !== 'undefined'){
       project.image     = req.body.image
     }
-    // project.tags        = req.body.tags
-    // project.liveURL     = req.body.liveURL
-    // project.github      = req.body.github
+    project.tags        = req.body.tags
+    project.liveURL     = req.body.liveURL
+    project.github      = req.body.github
     project.active      = req.body.active
 
     return project.save()
@@ -318,7 +321,7 @@ exports.updateProject = (req, res) => {
   findProject.then((project) => {
     // compare active status...
     compareStatus(project)
-    console.log({'updateList': newStatus})
+    // console.log({'updateList': newStatus})
     // if it changed, update active and inactive list
     if(newStatus) {
       updateList(project, 'Active Projects', req.body.active)
@@ -326,12 +329,22 @@ exports.updateProject = (req, res) => {
     }
     // save project with new data
     saveProject(project)
-    res.json({'status': 'success', 'message': `Project '${project.name}' has been updated`})
+    .then((savedData) => {
+      // console.log(savedData)
+      res.json({'status': 'success', 'message': `Project '${project.name}' has been updated`})
+    }
+    )
+    .catch((err) => {
+      if(err) {
+        console.error(err)
+        res.json({'status': 'failure', 'message': err.message})
+      }
+    })
   })
   // catch errors
   .catch((err) => {
     console.error(err)
-    res.json(err)
+    res.json({'status': 'failure', 'message': err.message})
   })
 
 }
